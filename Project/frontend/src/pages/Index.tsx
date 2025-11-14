@@ -30,7 +30,7 @@ const API_BASE_URL = envApiBase && envApiBase.length > 0 ? sanitizeBase(envApiBa
 
 const formSchema = z.object({
   mode: z.enum(["text", "image"]),
-  prompt: z.string().trim().min(1, "Prompt is required").max(2000, "Prompt must be less than 2000 characters"),
+  prompt: z.string().trim().max(20000, "Prompt must be less than 2000 characters"),
 });
 
 type FormData = z.infer<typeof formSchema>;
