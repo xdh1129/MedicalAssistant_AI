@@ -15,7 +15,6 @@ Before you begin, ensure you have the following installed on your workstation:
 1.  **Clone the repository:**
     ```bash
     git clone <repository-url>
-    cd NL_Project
     ```
 
 2.  **Run the start script:**
@@ -64,6 +63,6 @@ If the application is running on a remote workstation, you can access the fronte
 The backend service is configured to use the following Ollama models:
 
 - `hf.co/unsloth/medgemma-27b-it-GGUF:Q4_K_M`
-- `hf.co/mradermacher/II-Medical-8B-GGUF:Q4_K_M`
+- `llama3.1:latest`
 
 The `start.sh` script will attempt to prime these models to ensure they are ready to serve requests.
