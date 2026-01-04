@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 from typing import AsyncIterator, List, Optional, TypedDict
 
 from langchain_core.messages import AIMessage, AIMessageChunk, BaseMessage, HumanMessage, SystemMessage
@@ -67,8 +68,8 @@ def _extract_user_prompt(messages: List[BaseMessage]) -> str:
     return ""
 
 
-def radiologist_node(state: AgentState) -> AgentState:
-    """Runs the vision model when an image is present to produce a medical report."""
+def _create_radiologist_messages(state: AgentState) -> List[BaseMessage]:
+    """Helper to construct messages for the radiologist agent."""
     image_data = state.get("image_data")
     user_prompt = _extract_user_prompt(state["messages"])
 
@@ -76,7 +77,7 @@ def radiologist_node(state: AgentState) -> AgentState:
         {
             "type": "text",
             "text": (
-                "You are a radiologist. Analyze the provided medical image in detail. "
+                "You are a medical imaging analyst. Analyze the provided medical image in detail. "
                 "Focus on clinically relevant findings, note uncertainties, and avoid speculation."
             ),
         }
@@ -88,7 +89,33 @@ def radiologist_node(state: AgentState) -> AgentState:
     if image_data:
         human_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}})
 
-    response = radiologist_llm.invoke([HumanMessage(content=human_content)])
+    return [HumanMessage(content=human_content)]
+
+
+def _create_doctor_messages(state: AgentState) -> List[BaseMessage]:
+    """Helper to construct messages for the doctor agent."""
+    user_prompt = _extract_user_prompt(state["messages"])
+    medical_report = state.get("medical_report") or "No imaging report was generated."
+
+    prompt = (
+        "You are the attending physician speaking directly to the user. "
+        "Review the clinician's question and the imaging report and give a clear, plain-language answer with bullet points. "
+        "State any uncertainties and next steps the user can consider.\n\n"
+        f"Clinician question:\n{user_prompt}\n\n"
+        f"Imaging report:\n{medical_report}\n\n"
+        "Respond succinctly and conversationally; avoid AI-style disclaimers."
+    )
+
+    return [
+        SystemMessage(content="You are a careful medical doctor. Avoid overconfident claims."),
+        HumanMessage(content=prompt),
+    ]
+
+
+def radiologist_node(state: AgentState) -> AgentState:
+    """Runs the vision model when an image is present to produce a medical report."""
+    messages = _create_radiologist_messages(state)
+    response = radiologist_llm.invoke(messages)
 
     updated_messages = [*state["messages"], response] if isinstance(response, AIMessage) else state["messages"]
 
@@ -97,24 +124,8 @@ def radiologist_node(state: AgentState) -> AgentState:
 
 def doctor_node(state: AgentState) -> AgentState:
     """Synthesizes the user query and medical report into a final answer."""
-    user_prompt = _extract_user_prompt(state["messages"])
-    medical_report = state.get("medical_report") or "No imaging report was generated."
-
-    prompt = (
-        "You are the attending physician. Review the clinician's question and the medical imaging report "
-        "and provide a concise, clinically safe answer. If information is missing, state the limitations.\n\n"
-        f"Clinician question:\n{user_prompt}\n\n"
-        f"Imaging report:\n{medical_report}\n\n"
-        "Respond with clear bullet points when helpful and keep the tone professional."
-    )
-
-    response = doctor_llm.invoke(
-        [
-            SystemMessage(content="You are a careful medical doctor. Avoid overconfident claims."),
-            HumanMessage(content=prompt),
-        ]
-    )
-
+    messages = _create_doctor_messages(state)
+    response = doctor_llm.invoke(messages)
     updated_messages = [*state["messages"], response] if isinstance(response, AIMessage) else state["messages"]
 
     return {**state, "messages": updated_messages, "final_answer": response.content}
@@ -140,27 +151,10 @@ medical_graph = graph.compile()
 # --- Streaming helpers for SSE ---
 async def _stream_radiologist(state: AgentState) -> AsyncIterator[dict]:
     """Stream radiologist (VLM) tokens and update state."""
-    image_data = state.get("image_data")
-    user_prompt = _extract_user_prompt(state["messages"])
-
-    human_content = [
-        {
-            "type": "text",
-            "text": (
-                "You are a radiologist. Analyze the provided medical image in detail. "
-                "Focus on clinically relevant findings, note uncertainties, and avoid speculation."
-            ),
-        }
-    ]
-
-    if user_prompt:
-        human_content.append({"type": "text", "text": f"Clinician question: {user_prompt}"})
-
-    if image_data:
-        human_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}})
+    messages = _create_radiologist_messages(state)
 
     report = ""
-    async for chunk in radiologist_llm.astream([HumanMessage(content=human_content)]):
+    async for chunk in radiologist_llm.astream(messages):
         if isinstance(chunk, AIMessageChunk):
             token = _chunk_text(chunk.content)
             if token:
@@ -171,26 +165,13 @@ async def _stream_radiologist(state: AgentState) -> AsyncIterator[dict]:
     state["messages"] = [*state["messages"], AIMessage(content=report)]
 
 
+
 async def _stream_doctor(state: AgentState) -> AsyncIterator[dict]:
     """Stream doctor (LLM) tokens and update state."""
-    user_prompt = _extract_user_prompt(state["messages"])
-    medical_report = state.get("medical_report") or "No imaging report was generated."
-
-    prompt = (
-        "You are the attending physician. Review the clinician's question and the medical imaging report "
-        "and provide a concise, clinically safe answer. If information is missing, state the limitations.\n\n"
-        f"Clinician question:\n{user_prompt}\n\n"
-        f"Imaging report:\n{medical_report}\n\n"
-        "Respond with clear bullet points when helpful and keep the tone professional."
-    )
+    messages = _create_doctor_messages(state)
 
     answer = ""
-    async for chunk in doctor_llm.astream(
-        [
-            SystemMessage(content="You are a careful medical doctor. Avoid overconfident claims."),
-            HumanMessage(content=prompt),
-        ]
-    ):
+    async for chunk in doctor_llm.astream(messages):
         if isinstance(chunk, AIMessageChunk):
             token = _chunk_text(chunk.content)
             if token:

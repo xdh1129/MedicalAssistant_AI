@@ -143,7 +143,7 @@ const Index = () => {
             if (payload.event === "status" && payload.state === "queued") {
               setResponse("Queued... awaiting GPU availability.");
             } else if (payload.event === "status" && payload.state === "processing") {
-              setResponse("Processing...");
+              setResponse("Analyzing...");
             } else if (payload.event === "vlm_token" && payload.token) {
               vlmBuffer += payload.token;
               refreshResponse();
@@ -179,10 +179,10 @@ const Index = () => {
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Animated background gradient */}
       <div className="absolute inset-0 bg-[var(--gradient-glow)] pointer-events-none" />
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/10 rounded-full blur-[100px] pointer-events-none animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-0 right-0 w-56 h-56 sm:w-80 sm:h-80 lg:w-[500px] lg:h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 sm:w-72 sm:h-72 lg:w-[400px] lg:h-[400px] bg-accent/10 rounded-full blur-[100px] pointer-events-none animate-pulse" style={{ animationDelay: '1s' }} />
       
-      <div className="relative z-10 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <header className="text-center space-y-4">
             <div className="flex items-center justify-center gap-3 mb-2">
@@ -191,10 +191,10 @@ const Index = () => {
                 <div className="absolute inset-0 blur-xl bg-primary/50" />
               </div>
             </div>
-            <h1 className="text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-[gradient-shift_3s_ease_infinite]">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-[gradient-shift_3s_ease_infinite] leading-tight">
               MedGemma AI
             </h1>
-            <p className="text-muted-foreground text-xl max-w-2xl mx-auto leading-relaxed">
+            <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto leading-relaxed px-2">
               Next-generation medical inference powered by advanced language models
             </p>
             <div className="flex items-center justify-center gap-2 text-sm text-primary/80">
@@ -206,12 +206,12 @@ const Index = () => {
 
           <Card className="shadow-[var(--shadow-medium)] border border-border/50 bg-[var(--gradient-card)] backdrop-blur-xl relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-            <CardHeader className="relative">
-              <CardTitle className="flex items-center gap-2 text-2xl">
-                <Sparkles className="h-6 w-6 text-primary" />
+            <CardHeader className="relative space-y-2">
+              <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 Inference Configuration
               </CardTitle>
-              <CardDescription className="text-base">
+              <CardDescription className="text-sm sm:text-base">
                 {mode === "image" 
                   ? "Analyzing medical imagery with advanced AI vision" 
                   : "Configure your text-based inference parameters"}
@@ -222,7 +222,7 @@ const Index = () => {
               
                 {/* Image Upload Section - Always visible */}
                 <div className="space-y-3">
-                  <Label htmlFor="image-upload" className="text-base font-semibold flex items-center gap-2">
+                  <Label htmlFor="image-upload" className="text-base sm:text-lg font-semibold flex items-center gap-2 flex-wrap">
                     <ImageIcon className="h-5 w-5 text-primary" />
                     Medical Image Upload
                     <span className="text-xs font-normal text-muted-foreground ml-2">(Optional - Auto-switches to image mode)</span>
@@ -258,7 +258,7 @@ const Index = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="prompt" className="text-base font-semibold flex items-center gap-2">
+                  <Label htmlFor="prompt" className="text-base sm:text-lg font-semibold flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-accent" />
                     Prompt
                   </Label>
@@ -267,7 +267,7 @@ const Index = () => {
                     placeholder={mode === "image" 
                       ? "Describe what you'd like to analyze in the medical image..." 
                       : "Enter your medical query or instruction..."}
-                    className="min-h-[140px] resize-none bg-secondary/30 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="min-h-[140px] resize-none bg-secondary/30 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all text-base sm:text-lg"
                     {...form.register("prompt")}
                   />
                   {form.formState.errors.prompt && (
@@ -281,14 +281,14 @@ const Index = () => {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-14 text-lg font-bold bg-gradient-to-r from-primary to-accent hover:shadow-[var(--shadow-glow)] transition-all duration-300 group relative overflow-hidden"
+                  className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold bg-gradient-to-r from-primary to-accent hover:shadow-[var(--shadow-glow)] transition-all duration-300 group relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-accent to-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     {isLoading ? (
                       <>
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        Processing...
+                        Analyzing...
                       </>
                     ) : (
                       <>
@@ -308,14 +308,14 @@ const Index = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none" />
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-[gradient-shift_3s_ease_infinite]" />
               <CardHeader className="relative">
-                <CardTitle className="flex items-center gap-2 text-2xl">
-                  <Cpu className="h-6 w-6 text-primary animate-pulse" />
+                <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+                  <Cpu className="h-5 w-5 sm:h-6 sm:w-6 text-primary animate-pulse" />
                   AI Response
                   <span className="ml-auto text-sm font-normal text-muted-foreground">Inference Complete</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="relative">
-                <div className="bg-secondary/40 backdrop-blur-sm rounded-xl p-8 border border-border/30 font-mono text-sm whitespace-pre-wrap leading-relaxed shadow-inner">
+                <div className="bg-secondary/40 backdrop-blur-sm rounded-xl p-5 sm:p-8 border border-border/30 font-mono text-sm whitespace-pre-wrap leading-relaxed shadow-inner">
                   {response}
                 </div>
               </CardContent>

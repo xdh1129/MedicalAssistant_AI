@@ -1,60 +1,69 @@
-# MedGemma: API & CLI
+# BDA-Project
 
-This repository contains the backend API, modern web frontend, and command-line interface (CLI) for MedGemma, a tool designed to interact with medical language models.
+This project is a full-stack web application consisting of a React-based frontend and a Python backend. It leverages Docker for containerization and uses Ollama for running local large language models.
 
-## Project Structure
+## Prerequisites
 
-This project contains three main components. Please refer to the `README.md` within each directory for specific setup and usage instructions.
+Before you begin, ensure you have the following installed on your workstation:
 
--   [`/medgemma-api`](./medgemma-api/): The backend server built with Python (FastAPI).
--   [`/medgemma-frontend`](./medgemma-frontend/): Modern React-based web interface with shadcn/ui components.
--   [`/medgemma-cli`](./medgemma-cli/): The command-line tool to do local inferencing.
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- [Ollama](https://ollama.ai/)
 
 ## Getting Started
 
-### Clone the Repository with Submodules
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd NL_Project
+    ```
 
-This project uses git submodules for the frontend. Clone with:
+2.  **Run the start script:**
+    The `start.sh` script will handle the following:
+    - Check for necessary dependencies.
+    - Start a local Ollama server if one is not already running.
+    - Prime the required language models.
+    - Build and start the frontend and backend services using Docker Compose.
 
-```bash
-git clone --recurse-submodules git@github.com:MarsPresLai/MedGemma-Toolkit.git
-```
+    To start the application, run:
+    ```bash
+    ./start.sh
+    ```
 
-If you already cloned without submodules, initialize them:
+3.  **Accessing the Application:**
+    - The frontend is accessible at `http://localhost:8080`.
+    - The backend is accessible at `http://localhost:8000`.
 
-```bash
-git submodule update --init --recursive
-```
+## Accessing the Frontend from Your Local Machine
 
-### Setup Frontend
+If the application is running on a remote workstation, you can access the frontend in your local browser using SSH port forwarding.
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd medgemma-frontend
-   ```
+1.  **Open a terminal on your local machine.**
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+2.  **Run the following SSH command:**
+    Replace `user` with your username and `workstation-ip-address` with the IP address of your remote workstation.
 
-3. Build the frontend for production:
-   ```bash
-   npm run build
-   ```
+    ```bash
+    ssh -L 8080:localhost:8080 user@workstation-ip-address
+    ```
+    This command forwards port 8080 from your local machine to port 8080 on the remote workstation.
 
-   Or run in development mode (with hot reload):
-   ```bash
-   npm run dev
-   ```
+3.  **Open your local web browser.**
+    Navigate to `http://localhost:8080`. You should now see the application's frontend.
 
-### Setup Backend
+## Services
 
-1. Navigate to the API directory:
-   ```bash
-   cd medgemma-api
-   ```
+- **`frontend`**: A React application built with Vite (see `chat-frontend/`), served by Nginx.
+  - **Port:** `8080` on the host.
+- **`backend`**: A Python application.
+  - **Port:** `8000` on the host.
+  - This service communicates with an Ollama server running on the host machine.
 
-2. Follow the instructions in [`medgemma-api/README.md`](./medgemma-api/README.md) to set up and run the backend server.
+## Language Models
 
-The backend will automatically serve the built frontend from `medgemma-frontend/dist/` when you access the root URL.
+The backend service is configured to use the following Ollama models:
+
+- `hf.co/unsloth/medgemma-27b-it-GGUF:Q4_K_M`
+- `hf.co/mradermacher/II-Medical-8B-GGUF:Q4_K_M`
+
+The `start.sh` script will attempt to prime these models to ensure they are ready to serve requests.

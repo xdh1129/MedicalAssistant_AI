@@ -103,7 +103,7 @@ start_tunnel() {
   rm -f "$TUNNEL_LOG"
   
   # 使用 -tt 強制輸出，並忽略 Host Key 檢查
-  ssh -tt -R 80:localhost:${FRONTEND_PORT} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes localhost.run > "$TUNNEL_LOG" 2>&1 &
+  ssh -tt -R 80:localhost:${FRONTEND_PORT} -o ServerAliveInterval=60 -o ServerAliveCountMax=5 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes localhost.run > "$TUNNEL_LOG" 2>&1 &
   TUNNEL_PID=$!
 
   echo "⏳ Waiting for public URL..."
@@ -121,7 +121,6 @@ start_tunnel() {
           echo "======================================================"
           echo "🌍 \033[1;32mYour Public URL: $URL\033[0m"
           echo "======================================================"
-          echo "   (Docker logs will start in 5 seconds...)"
           echo ""
           return 0
         fi
